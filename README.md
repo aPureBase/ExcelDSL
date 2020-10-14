@@ -2,7 +2,7 @@
 A easy to use Kotlin DSL to build Excel documents
 
 ```kotlin
-excel {
+val file: File = excel {
   sheet {
     row {
       cell("Hello")
