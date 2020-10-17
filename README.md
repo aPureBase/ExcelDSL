@@ -18,3 +18,17 @@ val file: File = excel {
   }
 }
 ```
+
+
+# Installation
+
+Installation via Kotlin Gradle Script
+
+```kotlin
+repositories {
+    jcenter()
+}
+dependencies {
+  implementation("com.apurebase:ExcelDSL:$version")
+}
+```
