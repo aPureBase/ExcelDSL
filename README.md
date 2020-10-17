@@ -1,4 +1,6 @@
 # ExcelDSL
+[![Bintray](https://api.bintray.com/packages/apurebase/apurebase/ExcelDSL/images/download.svg)](https://bintray.com/apurebase/apurebase/ExcelDSL)
+
 A easy to use Kotlin DSL to build Excel documents
 
 ```kotlin
