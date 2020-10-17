@@ -24,10 +24,10 @@ public open class ExcelCellDSL(private val parent: ExcelRowDSL) {
     public var verticalAlignment: VerticalAlignment? = null
     public var horizontalAlignment: HorizontalAlignment? = null
 
-    internal var borderSettings: ExcelBorderRegion? = null
+    public var borderSettings: ExcelBorderRegion? = null
 
 
-    private var font: ExcelFont
+    public var font: ExcelFont
 
     public fun border(style: BorderStyle? = THIN, sides: BorderSide = ALL, color: IndexedColors = BLACK) {
         if (style == null) {
