@@ -75,12 +75,12 @@ public open class ExcelCellDSL(private val parent: ExcelRowDSL) {
     }
 
     internal companion object {
-        private val fontSet = mutableMapOf<ExcelFont, XSSFFont>()
-        private val styleSet = mutableMapOf<ExcelCellStyle, XSSFCellStyle>()
+        private val fontSet = mutableMapOf<Pair<XSSFWorkbook, ExcelFont>, XSSFFont>()
+        private val styleSet = mutableMapOf<Pair<XSSFWorkbook, ExcelCellStyle>, XSSFCellStyle>()
         private var dataFormat: XSSFDataFormat? = null
     }
 
-    internal fun ExcelFont.getCachedFont(workbook: XSSFWorkbook) = fontSet.getOrPut(this) {
+    internal fun ExcelFont.getCachedFont(workbook: XSSFWorkbook) = fontSet.getOrPut(workbook to this) {
         workbook.createFont().apply {
             this@getCachedFont.fontName?.let { this@apply.fontName = it }
             this@apply.fontHeightInPoints = this@getCachedFont.heightInPoints
@@ -90,7 +90,7 @@ public open class ExcelCellDSL(private val parent: ExcelRowDSL) {
         }
     }
 
-    private fun ExcelCellStyle.getCachedStyle(workbook: XSSFWorkbook) = styleSet.getOrPut(this) {
+    private fun ExcelCellStyle.getCachedStyle(workbook: XSSFWorkbook) = styleSet.getOrPut(workbook to this) {
         workbook.createCellStyle().apply {
             fillColor?.let {
                 this@apply.fillForegroundColor = it.getIndex()
