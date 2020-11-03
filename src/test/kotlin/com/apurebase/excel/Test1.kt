@@ -2,15 +2,21 @@ package com.apurebase.excel
 
 fun main() {
     excel {
-        sheet {
-            row {
-                cell("Hello")
-                cell("World!")
-            }
-            row(2)
-            row {
-                emptyCell(3)
-                cell("Here!")
+        (1..10).map {
+            println("Generating sheet $it")
+            sheet {
+                row {
+                    (1..20).map {
+                        cell("Cell $it")
+                    }
+                }
+                (1..10_000).map {
+                    row {
+                        (1..20).map {
+                            cell("Value $it")
+                        }
+                    }
+                }
             }
         }
     }

@@ -1,6 +1,5 @@
 package com.apurebase.excel
 
-import com.apurebase.excel.BorderSide
 import com.apurebase.excel.BorderSide.*
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.ss.usermodel.BorderStyle.THIN
@@ -75,8 +74,9 @@ public open class ExcelCellDSL(private val parent: ExcelRowDSL) {
         )
     }
 
-    private companion object {
+    internal companion object {
         private val fontSet = mutableMapOf<ExcelFont, XSSFFont>()
+        private val styleSet = mutableMapOf<ExcelCellStyle, XSSFCellStyle>()
         private var dataFormat: XSSFDataFormat? = null
     }
 
@@ -90,51 +90,59 @@ public open class ExcelCellDSL(private val parent: ExcelRowDSL) {
         }
     }
 
+    private fun ExcelCellStyle.getCachedStyle(workbook: XSSFWorkbook) = styleSet.getOrPut(this) {
+        workbook.createCellStyle().apply {
+            fillColor?.let {
+                this@apply.fillForegroundColor = it.getIndex()
+                this@apply.fillPattern = FillPatternType.SOLID_FOREGROUND
+            }
+            horizontalAlignment?.let { this@apply.alignment = it }
+            verticalAlignment?.let { this@apply.verticalAlignment = it }
+
+            borderSettings?.let { bs ->
+                bs.borderTop?.let {
+                    this@apply.borderTop = it
+                    this@apply.topBorderColor = bs.borderTopColor?.index ?: throw TODO("Show always exist!")
+                }
+                bs.borderRight?.let {
+                    this@apply.borderRight = it
+                    this@apply.rightBorderColor = bs.borderRightColor?.index ?: throw TODO("Show always exist!")
+                }
+                bs.borderBottom?.let {
+                    this@apply.borderBottom = it
+                    this@apply.bottomBorderColor = bs.borderBottomColor?.index ?: throw TODO("Show always exist!")
+                }
+                bs.borderLeft?.let {
+                    this@apply.borderLeft = it
+                    this@apply.leftBorderColor = bs.borderLeftColor?.index ?: throw TODO("Show always exist!")
+                }
+            }
+
+            setFont(this@getCachedStyle.font.getCachedFont(workbook))
+
+            numberFormat?.let { nf ->
+                if (ExcelCellDSL.dataFormat == null) ExcelCellDSL.dataFormat = workbook.createDataFormat()
+                this@apply.dataFormat = ExcelCellDSL.dataFormat!!.getFormat(nf)
+            }
+
+            this@apply.wrapText = wrapText
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     internal open fun buildAndApply(workbook: XSSFWorkbook, cell: XSSFCell) {
-        val style = workbook.createCellStyle()
-
-        fillColor?.let {
-            style.fillForegroundColor = it.getIndex()
-            style.fillPattern = FillPatternType.SOLID_FOREGROUND
-        }
-        horizontalAlignment?.let { style.alignment = it }
-        verticalAlignment?.let { style.verticalAlignment = it }
-
-        borderSettings?.let { bs ->
-            bs.borderTop?.let {
-                style.borderTop = it
-                style.topBorderColor = bs.borderTopColor?.index ?: throw TODO("Show always exist!")
-            }
-            bs.borderRight?.let {
-                style.borderRight = it
-                style.rightBorderColor = bs.borderRightColor?.index ?: throw TODO("Show always exist!")
-            }
-            bs.borderBottom?.let {
-                style.borderBottom = it
-                style.bottomBorderColor = bs.borderBottomColor?.index ?: throw TODO("Show always exist!")
-            }
-            bs.borderLeft?.let {
-                style.borderLeft = it
-                style.leftBorderColor = bs.borderLeftColor?.index ?: throw TODO("Show always exist!")
-            }
-        }
-
-        font.let { f ->
-            style.setFont(f.getCachedFont(workbook))
-        }
-
-        numberFormat?.let { nf ->
-            if (dataFormat == null) dataFormat = workbook.createDataFormat()
-            style.dataFormat = dataFormat!!.getFormat(nf)
-        }
-
-        style.wrapText = wrapText
-
-        cell.cellStyle = style
+        cell.cellStyle = ExcelCellStyle(
+            fillColor = fillColor,
+            horizontalAlignment = horizontalAlignment,
+            verticalAlignment = verticalAlignment,
+            borderSettings = borderSettings,
+            font = font,
+            numberFormat = numberFormat,
+            wrapText = wrapText
+        ).getCachedStyle(workbook)
 
         when (value) {
             null, "" -> return
