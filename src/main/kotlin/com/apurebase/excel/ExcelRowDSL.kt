@@ -102,7 +102,7 @@ public class ExcelRowDSL(public val currentRow: Int) {
                 is ExcelRegionDSL -> {
                     val innerRegions = cell.buildAndApply(workbook, sheet, row.rowNum, currentColIndex)
                     ranges.addAll(innerRegions)
-                    currentColIndex += cell.colSpan + 1
+                    currentColIndex += cell.colSpan
                 }
                 else -> throw TODO("Implementation not supported")
             }
