@@ -1,88 +1,127 @@
-import java.util.*
+import de.marcphilipp.gradle.nexus.NexusPublishPlugin
+import java.time.Duration
+
+val libVersion: String by project
+val poi_ooxmlVersion: String by project
+val ooxml_schemasVersion: String by project
+val sonatypeUsername: String? = project.findProperty("sonatypeUsername") as String? ?: System.getenv("sonatypeUsername")
+val sonatypePassword: String? = project.findProperty("sonatypeUsername") as String? ?: System.getenv("sonatypePassword")
 
 plugins {
-    kotlin("jvm") version "1.4.10"
-    id("com.jfrog.bintray") version "1.8.4"
-    `maven-publish`
+    kotlin("jvm") version "1.6.10"
+    id("org.jetbrains.dokka") version "1.5.0"
+    id("io.codearte.nexus-staging") version "0.21.2"
+    id("de.marcphilipp.nexus-publish") version "0.4.0"
+    id("com.github.ben-manes.versions") version "0.38.0"
+    signing
+    jacoco
 }
 
 group = "com.apurebase"
-version = "1.1.2"
+version = libVersion
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
     implementation(kotlin("stdlib"))
 
-    api("org.apache.poi:poi-ooxml:4.1.2")
-    implementation("org.apache.poi:ooxml-schemas:1.4")
+    api("org.apache.pozi:poi-ooxml:${poi_ooxmlVersion}")
+    implementation("org.apache.poi:ooxml-schemas:$ooxml_schemasVersion")
 }
 
-val sourcesJar by tasks.creating(Jar::class) {
-    archiveClassifier.set("sources")
-    from(sourceSets.getByName("main").allSource)
-    from("LICENCE") {
-        into("META-INF")
+kotlin {
+    apply<NexusPublishPlugin>()
+
+    nexusPublishing {
+        repositories {
+            sonatype()
+        }
+        clientTimeout.set(Duration.parse("PT10M")) // 10 minutes
     }
-}
 
 
+    explicitApi()
 
-val githubUrl = "https://github.com/aPureBase/ExcelDSL"
-
-publishing {
-    publications {
-        create<MavenPublication>("excel-dsl") {
-            groupId = project.group.toString()
-            artifactId = project.name
-            version = project.version.toString()
-            from(components["java"])
-            artifact(sourcesJar)
-
-            pom {
-                packaging = "jar"
-                name.set(rootProject.name)
-                url.set(githubUrl)
-                scm { url.set(githubUrl) }
-                issueManagement { url.set("$githubUrl/issues") }
-                licenses {
-                    license {
-                        name.set("MIT")
-                        url.set("$githubUrl/blob/master/LICENSE")
-                    }
-                }
-                developers {
-                    developer {
-                        id.set("jeggy")
-                        name.set("Jógvan Olsen")
-                    }
+    tasks {
+        test {
+            useJUnitPlatform()
+            doFirst {
+                jvmArgs = listOf(
+                    "-javaagent:${classpath.find { it.name.contains("jmockit") }!!.absolutePath}"
+                )
+            }
+        }
+        dokkaHtml {
+            outputDirectory.set(buildDir.resolve("javadoc"))
+            dokkaSourceSets {
+                configureEach {
+                    jdkVersion.set(8)
+                    reportUndocumented.set(true)
+                    platform.set(org.jetbrains.dokka.Platform.jvm)
                 }
             }
         }
+        wrapper {
+            distributionType = Wrapper.DistributionType.ALL
+        }
+        closeRepository {
+            mustRunAfter(subprojects.map { it.tasks.getByName("publishToSonatype") }.toTypedArray())
+        }
+        closeAndReleaseRepository {
+            mustRunAfter(subprojects.map { it.tasks.getByName("publishToSonatype") }.toTypedArray())
+        }
     }
-}
-kotlin {
-    explicitApi()
 
-    bintray {
-        user = System.getenv("BINTRAY_USER")
-        key = System.getenv("BINTRAY_KEY")
 
-        publish = true
-        setPublications("excel-dsl")
-        pkg.apply {
-            repo = "apurebase"
-            name = project.name
-            setLicenses("MIT")
-            setLabels("kotlin", "excel", "apache", "poi", "dsl")
-            vcsUrl = githubUrl
-            websiteUrl = githubUrl
-            issueTrackerUrl = "$githubUrl/issues"
-            version.apply {
-                name = "${project.version}"
-                released = "${Date()}"
+
+
+
+    val sourcesJar by tasks.creating(Jar::class) {
+        classifier = "sources"
+        from(sourceSets.main.get())
+    }
+    val dokkaJar by tasks.creating(Jar::class) {
+        group = JavaBasePlugin.DOCUMENTATION_GROUP
+        classifier = "javadoc"
+        from(tasks.dokkaHtml)
+    }
+
+    publishing {
+        publications {
+            create<MavenPublication>("maven") {
+                artifactId = project.name
+                from(components["java"])
+                artifact(sourcesJar)
+                artifact(dokkaJar)
+                pom {
+                    name.set("ExcelDSL")
+                    description.set("A easy to use Kotlin DSL to build Excel documents")
+                    organization {
+                        name.set("aPureBase")
+                        url.set("https://apurebase.com/")
+                    }
+                    licenses {
+                        license {
+                            name.set("The Apache License, Version 2.0")
+                            url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                        }
+                    }
+                    developers {
+                        developer {
+                            id.set("jeggy")
+                            name.set("Jógvan Olsen")
+                            email.set("jol@apurebase.com")
+                        }
+                    }
+                    scm {
+                        connection.set("scm:git:https://github.com/aPureBase/ExcelDSL.git")
+                        developerConnection.set("scm:git:https://github.com/aPureBase/ExcelDSL.git")
+                        url.set("https://github.com/aPureBase/ExcelDSL/")
+                        tag.set("HEAD")
+                    }
+                }
             }
         }
     }
