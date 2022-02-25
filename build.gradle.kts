@@ -9,6 +9,7 @@ val sonatypeUsername: String? = project.findProperty("sonatypeUsername") as Stri
 val sonatypePassword: String? = project.findProperty("sonatypePassword") as String? ?: System.getenv("sonatypePassword")
 
 plugins {
+    base
     kotlin("jvm") version "1.6.10"
     id("org.jetbrains.dokka") version "1.5.0"
     id("io.codearte.nexus-staging") version "0.21.2"
