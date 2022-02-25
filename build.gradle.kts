@@ -4,6 +4,7 @@ import java.time.Duration
 val libVersion: String by project
 val poi_ooxmlVersion: String by project
 val ooxml_schemasVersion: String by project
+val junit_version: String by project
 val sonatypeUsername: String? = project.findProperty("sonatypeUsername") as String? ?: System.getenv("sonatypeUsername")
 val sonatypePassword: String? = project.findProperty("sonatypePassword") as String? ?: System.getenv("sonatypePassword")
 
@@ -29,6 +30,8 @@ dependencies {
 
     api("org.apache.poi:poi-ooxml:${poi_ooxmlVersion}")
     implementation("org.apache.poi:ooxml-schemas:$ooxml_schemasVersion")
+
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")
 }
 
 kotlin {
