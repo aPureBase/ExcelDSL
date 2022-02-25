@@ -7,6 +7,7 @@ val ooxml_schemasVersion: String by project
 val junit_version: String by project
 val sonatypeUsername: String? = project.findProperty("sonatypeUsername") as String? ?: System.getenv("sonatypeUsername")
 val sonatypePassword: String? = project.findProperty("sonatypePassword") as String? ?: System.getenv("sonatypePassword")
+val isReleaseVersion = !version.toString().endsWith("SNAPSHOT")
 
 plugins {
     base
@@ -130,4 +131,12 @@ kotlin {
             mustRunAfter(subprojects.map { it.tasks.getByName("publishToSonatype") }.toTypedArray())
         }
     }
+}
+signing {
+    isRequired = isReleaseVersion
+    useInMemoryPgpKeys(
+        System.getenv("ORG_GRADLE_PROJECT_signingKey"),
+        System.getenv("ORG_GRADLE_PROJECT_signingPassword")
+    )
+    sign(publishing.publications["maven"])
 }
