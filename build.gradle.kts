@@ -70,6 +70,7 @@ publishing {
             pom {
                 name.set("ExcelDSL")
                 description.set("A easy to use Kotlin DSL to build Excel documents")
+                url.set("https://github.com/aPureBase/ExcelDSL/")
                 organization {
                     name.set("aPureBase")
                     url.set("https://apurebase.com/")
