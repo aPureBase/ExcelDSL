@@ -52,7 +52,7 @@ nexusPublishing {
 
 val sourcesJar by tasks.creating(Jar::class) {
     classifier = "sources"
-    from(sourceSets.main.get())
+    from(sourceSets.main.get().allSource)
 }
 val dokkaJar by tasks.creating(Jar::class) {
     group = JavaBasePlugin.DOCUMENTATION_GROUP
