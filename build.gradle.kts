@@ -5,7 +5,7 @@ val libVersion: String by project
 val poi_ooxmlVersion: String by project
 val ooxml_schemasVersion: String by project
 val sonatypeUsername: String? = project.findProperty("sonatypeUsername") as String? ?: System.getenv("sonatypeUsername")
-val sonatypePassword: String? = project.findProperty("sonatypeUsername") as String? ?: System.getenv("sonatypePassword")
+val sonatypePassword: String? = project.findProperty("sonatypePassword") as String? ?: System.getenv("sonatypePassword")
 
 plugins {
     kotlin("jvm") version "1.6.10"
@@ -33,6 +33,14 @@ dependencies {
 
 kotlin {
     apply<NexusPublishPlugin>()
+
+    nexusStaging {
+        packageGroup = "com.apurebase"
+        username = sonatypeUsername
+        password = sonatypePassword
+        numberOfRetries = 360 // 1 hour if 10 seconds delay
+        delayBetweenRetriesInMillis = 10000 // 10 seconds
+    }
 
     nexusPublishing {
         repositories {
