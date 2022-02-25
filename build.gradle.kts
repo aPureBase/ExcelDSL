@@ -27,7 +27,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
 
-    api("org.apache.pozi:poi-ooxml:${poi_ooxmlVersion}")
+    api("org.apache.poi:poi-ooxml:${poi_ooxmlVersion}")
     implementation("org.apache.poi:ooxml-schemas:$ooxml_schemasVersion")
 }
 

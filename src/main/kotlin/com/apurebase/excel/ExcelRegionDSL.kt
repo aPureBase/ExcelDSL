@@ -5,8 +5,8 @@ import org.apache.poi.xssf.usermodel.XSSFSheet
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 
 @ExcelDSLMarker
-public class ExcelRegionDSL(public val rowSpan: Int, public val colSpan: Int) {
-    private val rows = mutableListOf<ExcelRowDSL>()
+public class ExcelRegionDSL(public val rowSpan: Int, public val colSpan: Int): ExcelCell {
+    internal val rows = mutableListOf<ExcelRowDSL>()
 
     public fun row(block: ExcelRowDSL.() -> Unit) {
         ExcelRowDSL(rows.rowIndex).apply(block).let(rows::add)
@@ -18,7 +18,7 @@ public class ExcelRegionDSL(public val rowSpan: Int, public val colSpan: Int) {
 
 
     internal fun buildAndApply(workbook: XSSFWorkbook, sheet: XSSFSheet, startRowIndex: Int, startColIndex: Int): List<CellRangeAddress> {
-        val actualRowSpan = rows.sumBy(ExcelRowDSL::span)
+        val actualRowSpan = rows.sumOf(ExcelRowDSL::span)
         require(actualRowSpan <= rowSpan) {
             // TODO: Provide some more information about where in the document this error happened, as this is all DSL we need better error reporting!
             "Number of rows within region '$actualRowSpan' when '$rowSpan' rows are required!"

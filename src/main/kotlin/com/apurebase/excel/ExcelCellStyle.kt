@@ -10,6 +10,5 @@ internal data class ExcelCellStyle(
     val verticalAlignment: VerticalAlignment? = null,
     val borderSettings: ExcelBorderRegion? = null,
     val font: ExcelFont = ExcelFont(),
-    val numberFormat: String? = null,
     val wrapText: Boolean = false
 )

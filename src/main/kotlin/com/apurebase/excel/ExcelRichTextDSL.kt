@@ -1,10 +1,11 @@
 package com.apurebase.excel
 
 import org.apache.poi.xssf.usermodel.XSSFCell
+import org.apache.poi.xssf.usermodel.XSSFSheet
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 
 
-public class ExcelRichTextDSL(parent: ExcelRowDSL): ExcelCellDSL(parent) {
+public class ExcelRichTextDSL(parent: ExcelRowDSL, currentColIndex: Int): ExcelCellDSL(parent, currentColIndex) {
 
     private val texts = mutableListOf<ExcelRichTextIndexedDSL>()
 
@@ -12,7 +13,7 @@ public class ExcelRichTextDSL(parent: ExcelRowDSL): ExcelCellDSL(parent) {
         texts.add(ExcelRichTextIndexedDSL(str, font))
     }
 
-    override fun buildAndApply(workbook: XSSFWorkbook, cell: XSSFCell) {
+    override fun buildAndApply(workbook: XSSFWorkbook, sheet: XSSFSheet, cell: XSSFCell) {
         val richText = workbook.creationHelper.createRichTextString(texts.joinToString(separator = "") { it.text })
 
         var pointer = 0
@@ -23,7 +24,7 @@ public class ExcelRichTextDSL(parent: ExcelRowDSL): ExcelCellDSL(parent) {
         }
 
         value = richText
-        super.buildAndApply(workbook, cell)
+        super.buildAndApply(workbook, sheet, cell)
     }
 
 }

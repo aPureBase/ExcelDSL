@@ -4,21 +4,20 @@ import com.apurebase.excel.BorderSide.*
 import org.apache.poi.ss.usermodel.*
 import org.apache.poi.ss.usermodel.BorderStyle.THIN
 import org.apache.poi.ss.usermodel.IndexedColors.BLACK
+import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.xssf.usermodel.*
 
 @ExcelDSLMarker
-public open class ExcelCellDSL(private val parent: ExcelRowDSL) {
+public open class ExcelCellDSL(
+    private val parent: ExcelRowDSL,
+    public val currentColumnIndex: Int,
+): ExcelCell {
 
     public var value: Any? = null
     public var span: Int = 1
     public var fillColor: IndexedColors? = null
     public var wrapText: Boolean
 
-
-    /**
-     * @see <a href="https://support.microsoft.com/en-us/office/review-guidelines-for-customizing-a-number-format-c0a1d1fa-d3f4-4018-96b7-9c9354dd99f5">Review guidelines for customizing a number format</a>
-     */
-    public var numberFormat: String? = null
 
     public var verticalAlignment: VerticalAlignment? = null
     public var horizontalAlignment: HorizontalAlignment? = null
@@ -63,6 +62,12 @@ public open class ExcelCellDSL(private val parent: ExcelRowDSL) {
         font = ExcelFont().apply(block)
     }
 
+    private val conditionalFormatting = mutableListOf<ExcelConditionalFormatDSL>()
+
+    public fun addConditionalFormatting(operator: ConditionalOperator = ConditionalOperator.EQUAL, formula: String, color: IndexedColors? = null) {
+        conditionalFormatting.add(ExcelConditionalFormatDSL(operator, formula, color))
+    }
+
     init {
         font = parent.font ?: ExcelFont()
         wrapText = parent.wrapText ?: false
@@ -87,6 +92,7 @@ public open class ExcelCellDSL(private val parent: ExcelRowDSL) {
             this@apply.bold = this@getCachedFont.bold
             this@apply.italic = this@getCachedFont.italic
             this@apply.strikeout = this@getCachedFont.strikeout
+            this@getCachedFont.color?.let { this@apply.color = it.getIndex() }
         }
     }
 
@@ -119,12 +125,10 @@ public open class ExcelCellDSL(private val parent: ExcelRowDSL) {
             }
 
             setFont(this@getCachedStyle.font.getCachedFont(workbook))
-
-            numberFormat?.let { nf ->
+            this@getCachedStyle.font.numberFormat?.let { nf ->
                 if (ExcelCellDSL.dataFormat == null) ExcelCellDSL.dataFormat = workbook.createDataFormat()
                 this@apply.dataFormat = ExcelCellDSL.dataFormat!!.getFormat(nf)
             }
-
             this@apply.wrapText = wrapText
         }
     }
@@ -133,16 +137,30 @@ public open class ExcelCellDSL(private val parent: ExcelRowDSL) {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    internal open fun buildAndApply(workbook: XSSFWorkbook, cell: XSSFCell) {
+    internal open fun buildAndApply(workbook: XSSFWorkbook, sheet: XSSFSheet, cell: XSSFCell) {
         cell.cellStyle = ExcelCellStyle(
             fillColor = fillColor,
             horizontalAlignment = horizontalAlignment,
             verticalAlignment = verticalAlignment,
             borderSettings = borderSettings,
             font = font,
-            numberFormat = numberFormat,
             wrapText = wrapText
         ).getCachedStyle(workbook)
+
+
+        conditionalFormatting.forEach { cf ->
+            sheet.sheetConditionalFormatting.addConditionalFormatting(
+                arrayOf(CellRangeAddress(parent.currentRow - 1, parent.currentRow - 1, currentColumnIndex, currentColumnIndex)),
+                sheet.sheetConditionalFormatting.createConditionalFormattingRule(cf.operator.byte, cf.formula).apply {
+                    cf.fillColor?.let { color ->
+                        createPatternFormatting().apply {
+                            fillBackgroundColor = color.index
+                        }
+                    }
+                },
+            )
+        }
+
 
         when (value) {
             null, "" -> return

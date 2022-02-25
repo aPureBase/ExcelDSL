@@ -11,7 +11,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 @ExcelDSLMarker
 public class ExcelRowDSL(public val currentRow: Int) {
 
-    private val cells = mutableListOf<Any>()
+    internal val cells = mutableListOf<ExcelCell>()
 
     public var span: Int = 1
     public var heightInPoints: Float = 15f
@@ -30,27 +30,27 @@ public class ExcelRowDSL(public val currentRow: Int) {
 
 
     public fun richCell(block: ExcelRichTextDSL.() -> Unit = {}) {
-        ExcelRichTextDSL(this)
+        ExcelRichTextDSL(this, cells.cellIndex)
             .apply(block)
             .let(cells::add)
     }
 
     public fun cell(value: String = "", block: ExcelCellDSL.() -> Unit = {}) {
-        ExcelCellDSL(this).apply {
+        ExcelCellDSL(this, cells.cellIndex).apply {
             this.value = value
             block(this)
         }.let(cells::add)
     }
 
     public fun cell(value: Number, block: ExcelCellDSL.() -> Unit = {}) {
-        ExcelCellDSL(this).apply {
+        ExcelCellDSL(this, cells.cellIndex).apply {
             this.value = value
             block(this)
         }.let(cells::add)
     }
 
     public fun cellFormula(formula: String, block: ExcelCellDSL.() -> Unit = {}) {
-        ExcelCellDSL(this).apply {
+        ExcelCellDSL(this, cells.cellIndex).apply {
             this.value = ExcelCellFormula(formula)
             block(this)
         }.let(cells::add)
@@ -76,7 +76,7 @@ public class ExcelRowDSL(public val currentRow: Int) {
         cells.forEach { cell ->
             when (cell) {
                 is ExcelCellDSL -> {
-                    row.createCell(currentColIndex).let { cell.buildAndApply(workbook, it) }
+                    row.createCell(currentColIndex).let { cell.buildAndApply(workbook, sheet, it) }
 
                     if (span > 1 || cell.span > 1) {
                         val newRange = CellRangeAddress(
@@ -104,7 +104,6 @@ public class ExcelRowDSL(public val currentRow: Int) {
                     ranges.addAll(innerRegions)
                     currentColIndex += cell.colSpan
                 }
-                else -> throw TODO("Implementation not supported")
             }
         }
 
