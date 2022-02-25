@@ -1,7 +1,7 @@
 # ExcelDSL
-[![Bintray](https://api.bintray.com/packages/apurebase/apurebase/ExcelDSL/images/download.svg)](https://bintray.com/apurebase/apurebase/ExcelDSL)
+[![Maven Central](https://img.shields.io/maven-central/v/com.apurebase/ExcelDSL.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.apurebase%22%20AND%20a:%22ExcelDSL%22)
 
-A easy to use Kotlin DSL to build Excel documents
+An easy-to-use Kotlin DSL to build Excel documents
 
 ```kotlin
 val file: File = excel {
@@ -26,7 +26,7 @@ Installation via Kotlin Gradle Script
 
 ```kotlin
 repositories {
-    jcenter()
+    mavenCentral()
 }
 dependencies {
   implementation("com.apurebase:ExcelDSL:$version")
